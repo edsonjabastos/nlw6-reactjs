@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useParams } from 'react-router';
-import { type } from 'os';
+// import { type } from 'os';
 
 import { Button } from '../components/Button';
 import { RoomCode } from '../components/RoomCode';
@@ -9,31 +9,13 @@ import logoImg from '../assets/images/logo.svg';
 import '../styles/room.scss'
 import { useAuth } from '../hooks/useAuth';
 import { database } from '../services/firebase';
-import { useEffect } from 'react';
-import firebase from 'firebase';
+// import { useEffect } from 'react';
+import { Question } from '../components/Question';
+import { useRoom } from '../hooks/useRoom';
+
+// import firebase from 'firebase';
+
 // import { Link } from 'react-router-dom';
-
-
-type FirebaseQuestions = Record<string, {
-  author: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  isAnswered: boolean;
-  isHighlighted: boolean;
-}>;
-
-type Question = {
-  id: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  content: string;
-  isAnswered: boolean;
-  isHighlighted: boolean;
-};
 
 type RoomParams = {
   id: string;
@@ -44,31 +26,10 @@ export function Room() {
   const params = useParams<RoomParams>();
   const roomId = params.id;
   const [newQuestion, setNewQuestion] = useState('');
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [title, setTitle] = useState('');
+  const { title, questions} = useRoom(roomId);
+  
 
-  useEffect(() => {
-    // console.log(roomId)
-    const roomRef = database.ref(`rooms/${roomId}`);
 
-    roomRef.on('value', room => {
-      // console.log(room.val());
-      const databaseRoom = room.val();
-      const firebaseQuestions: FirebaseQuestions = databaseRoom.questions ?? {};
-      const parsedQuestions = Object.entries(firebaseQuestions).map(([key, value]) => {
-        return {
-          id: key,
-          content: value.content,
-          author: value.author,
-          isHighlighted: value.isHighlighted,
-          isAnswered: value.isAnswered,
-        }
-      });
-      setTitle(databaseRoom.title);
-      setQuestions(parsedQuestions);
-      // console.log(parsedQuestions)
-    });
-  }, [roomId]);
 
   async function handleSendQuestion(event: FormEvent) {
     event.preventDefault();
@@ -128,7 +89,17 @@ export function Room() {
           </div>
         </form>
 
-        {JSON.stringify(questions)}
+        <div className="question-list">
+        {questions.map(question => {
+          return (
+            <Question 
+              key={question.id} //ALGORITMO DE RECONCILIAÇÃO
+              content={question.content}
+              author={question.author}
+            />
+          );
+        })};
+        </div>
       </main>
     </div>
   );
